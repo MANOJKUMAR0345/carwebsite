@@ -4,12 +4,11 @@ pipeline {
 
     stages {
 
-        stage('Clone Repo') {
-            steps {
-                git branch: 'main',
-                    url: 'https://github.com/MANOJKUMAR0345/carwebsite.git'
-            }
-        }
+       stage('Check Files') {
+    steps {
+        sh 'ls -la'
+    }
+}
 
         stage('Build Docker Image') {
             steps {
