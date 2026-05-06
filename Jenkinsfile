@@ -1,24 +1,36 @@
 pipeline {
     agent { label 'agent' }   // run on agent (not controller)
 
+    triggers {
+        githubPush()   // 🔥 VERY IMPORTANT for auto deploy
+    }
+
     environment {
         APP_NAME = "carwebsite"
         CONTAINER_NAME = "carwebsite_container"
         PORT = "80"
     }
 
+    options {
+        skipDefaultCheckout(true)
+        timestamps()
+    }
+
     stages {
 
         stage('Checkout') {
             steps {
+                echo "Cloning latest code..."
                 checkout scm
             }
         }
 
         stage('Check Files') {
             steps {
-                sh 'echo "Listing project files..."'
-                sh 'ls -la'
+                sh '''
+                echo "Listing project files..."
+                ls -la
+                '''
             }
         }
 
@@ -45,7 +57,8 @@ pipeline {
             steps {
                 sh '''
                 echo "Starting new container..."
-                docker run -d -p ${PORT}:80 --name $CONTAINER_NAME $APP_NAME:latest
+                docker run -d -p ${PORT}:80 --restart always \
+                --name $CONTAINER_NAME $APP_NAME:latest
                 '''
             }
         }
@@ -53,7 +66,7 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 sh '''
-                echo "Running containers:"
+                echo "Checking running containers..."
                 docker ps
                 '''
             }
@@ -75,6 +88,9 @@ pipeline {
         }
         failure {
             echo '❌ Deployment Failed!'
+        }
+        always {
+            echo '📦 Pipeline execution completed'
         }
     }
 }
